@@ -353,10 +353,10 @@ button.secondary:hover {
 }
 
 .dashboard-site-indicator {
-  width: 190px;
-  height: 58px;
+  width: 250px;
+  height: 78px;
   flex-shrink: 0;
-  margin: 0 0 10px;
+  margin: 0 0 14px;
 }
 
 .dashboard-heading h1 {
@@ -389,7 +389,7 @@ button.secondary:hover {
   display: grid;
   place-items: center;
   padding: 0;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .site-indicator-image {
@@ -580,6 +580,19 @@ button.secondary:hover {
   border-color: #93c5fd;
 }
 
+.date.deadline-day {
+  background: #fee2e2;
+  border-color: #ef4444;
+  color: #7f1d1d;
+  font-weight: 800;
+  box-shadow: inset 0 -4px 0 rgba(220, 38, 38, 0.18);
+}
+
+.date.deadline-day.today {
+  background: linear-gradient(180deg, #fee2e2 0%, #fecaca 100%);
+  border-color: #dc2626;
+}
+
 .tracker-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -636,6 +649,213 @@ button.secondary:hover {
 
 .deadline-card {
   background: linear-gradient(180deg, #eef4ff 0%, #dbeafe 100%);
+}
+
+.dashboard-tools {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(320px, 0.75fr);
+  gap: 24px;
+  margin-top: 24px;
+}
+
+.tool-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+  align-items: flex-start;
+  margin-bottom: 20px;
+}
+
+.tool-header h2 {
+  margin-bottom: 8px;
+}
+
+.tool-header p {
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.course-total-chip {
+  min-width: 88px;
+  padding: 12px 14px;
+  border-radius: 16px;
+  background: #dbeafe;
+  color: #1d4ed8;
+  font-size: 1.15rem;
+  font-weight: 800;
+  text-align: center;
+}
+
+.course-add-row,
+.deadline-add-row {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.course-add-row {
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.deadline-add-row {
+  grid-template-columns: minmax(0, 1fr) 170px auto;
+}
+
+.course-add-row input,
+.deadline-add-row input,
+.component-row input,
+.component-row select {
+  width: 100%;
+  padding: 12px 13px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: #f8fbff;
+  font: inherit;
+}
+
+.course-add-row input:focus,
+.deadline-add-row input:focus,
+.component-row input:focus,
+.component-row select:focus {
+  outline: none;
+  border-color: #93c5fd;
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.12);
+}
+
+.course-list {
+  display: grid;
+  gap: 16px;
+}
+
+.course-breakdown-card {
+  border: 1px solid #bfdbfe;
+  border-radius: 22px;
+  padding: 18px;
+  background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+}
+
+.course-card-top,
+.component-summary,
+.deadline-item {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.course-card-top {
+  margin-bottom: 14px;
+}
+
+.course-card-top h3 {
+  font-size: 1.2rem;
+}
+
+.course-score {
+  padding: 9px 12px;
+  border-radius: 999px;
+  background: #dbeafe;
+  color: #1d4ed8;
+  font-weight: 800;
+}
+
+.component-summary {
+  margin-bottom: 12px;
+  color: var(--muted);
+  font-size: 0.93rem;
+}
+
+.weight-good {
+  color: #047857;
+  font-weight: 800;
+}
+
+.weight-warning {
+  color: #dc2626;
+  font-weight: 800;
+}
+
+.component-list {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.component-row {
+  display: grid;
+  grid-template-columns: minmax(120px, 1.1fr) repeat(3, minmax(86px, 0.7fr)) auto auto;
+  gap: 8px;
+  align-items: center;
+}
+
+.component-result {
+  color: #1d4ed8;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.mini-delete-btn {
+  padding: 10px 12px;
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.mini-delete-btn:hover {
+  background: #fecaca;
+}
+
+.component-add-btn {
+  background: #e0f2fe;
+  color: #075985;
+}
+
+.component-add-btn:hover {
+  background: #bae6fd;
+}
+
+.empty-state {
+  padding: 18px;
+  border: 1px dashed #bfdbfe;
+  border-radius: 16px;
+  color: var(--muted);
+  background: #f8fbff;
+  line-height: 1.6;
+}
+
+.deadline-alerts {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.deadline-alert {
+  padding: 13px 14px;
+  border-radius: 16px;
+  border: 1px solid #fecaca;
+  background: #fef2f2;
+  color: #7f1d1d;
+  font-weight: 700;
+  line-height: 1.45;
+}
+
+.deadline-list {
+  list-style: none;
+  display: grid;
+  gap: 10px;
+}
+
+.deadline-item {
+  padding: 13px;
+  border-radius: 16px;
+  border: 1px solid #bfdbfe;
+  background: #f8fbff;
+}
+
+.deadline-item time {
+  display: block;
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 0.92rem;
 }
 
 .tracker-page .dashboard-header {
@@ -844,7 +1064,8 @@ button.secondary:hover {
 
 @media (max-width: 960px) {
   .auth-shell,
-  .dashboard-layout {
+  .dashboard-layout,
+  .dashboard-tools {
     grid-template-columns: 1fr;
   }
 
@@ -869,14 +1090,16 @@ button.secondary:hover {
   .dashboard-header,
   .dashboard-brand,
   .header-actions,
-  .button-group {
+  .button-group,
+  .tool-header,
+  .component-summary {
     flex-direction: column;
     align-items: stretch;
   }
 
   .dashboard-site-indicator {
-    width: 170px;
-    height: 52px;
+    width: 220px;
+    height: 70px;
   }
 
   .auth-intro,
@@ -887,6 +1110,12 @@ button.secondary:hover {
   }
 
   .todo-input {
+    grid-template-columns: 1fr;
+  }
+
+  .course-add-row,
+  .deadline-add-row,
+  .component-row {
     grid-template-columns: 1fr;
   }
 

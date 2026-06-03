@@ -20,7 +20,9 @@ const STORAGE_KEYS = {
   authMode: "authMode",
   authNotice: "authNotice",
   savedEmails: "savedEmails",
-  semesters: "semesters"
+  semesters: "semesters",
+  courses: "courses",
+  deadlines: "deadlines"
 };
 
 const API_BASE_URL = window.location.origin.startsWith("http")
@@ -133,6 +135,16 @@ function todoStorageKey() {
 function semesterStorageKey() {
   const currentUser = normalizeEmail(localStorage.getItem(STORAGE_KEYS.currentUser));
   return currentUser ? `${STORAGE_KEYS.semesters}_${currentUser}` : STORAGE_KEYS.semesters;
+}
+
+function courseStorageKey() {
+  const currentUser = normalizeEmail(localStorage.getItem(STORAGE_KEYS.currentUser));
+  return currentUser ? `${STORAGE_KEYS.courses}_${currentUser}` : STORAGE_KEYS.courses;
+}
+
+function deadlineStorageKey() {
+  const currentUser = normalizeEmail(localStorage.getItem(STORAGE_KEYS.currentUser));
+  return currentUser ? `${STORAGE_KEYS.deadlines}_${currentUser}` : STORAGE_KEYS.deadlines;
 }
 
 function createDefaultCourse(index) {
@@ -436,6 +448,363 @@ function renderSPITable() {
   });
 
   updateSPISummary();
+}
+
+/* ================= COURSE TRACKER ================= */
+function getCourses() {
+  const courses = safeParse(localStorage.getItem(courseStorageKey()), []);
+  return Array.isArray(courses) ? courses : [];
+}
+
+function saveCourses(courses) {
+  localStorage.setItem(courseStorageKey(), JSON.stringify(courses));
+}
+
+function createCourse(name) {
+  return {
+    id: `course_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
+    name,
+    components: []
+  };
+}
+
+function createComponent() {
+  return {
+    id: `component_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
+    type: "Assignment",
+    weight: "",
+    totalMarks: "",
+    scoredMarks: ""
+  };
+}
+
+function calculateCourseStats(course) {
+  let totalWeight = 0;
+  let weightedScore = 0;
+
+  course.components.forEach(component => {
+    const weight = Number(component.weight);
+    const totalMarks = Number(component.totalMarks);
+    const scoredMarks = Number(component.scoredMarks);
+
+    if (Number.isFinite(weight) && weight > 0) {
+      totalWeight += weight;
+    }
+
+    if (
+      Number.isFinite(weight) && weight > 0 &&
+      Number.isFinite(totalMarks) && totalMarks > 0 &&
+      Number.isFinite(scoredMarks) && scoredMarks >= 0
+    ) {
+      const cappedScore = Math.min(scoredMarks, totalMarks);
+      weightedScore += (cappedScore / totalMarks) * weight;
+    }
+  });
+
+  return {
+    totalWeight,
+    weightedScore,
+    isComplete: Math.abs(totalWeight - 100) < 0.01
+  };
+}
+
+function addCourse() {
+  const input = document.getElementById("courseNameInput");
+  if (!input) return;
+
+  const name = input.value.trim();
+  if (!name) {
+    input.focus();
+    return;
+  }
+
+  const courses = getCourses();
+  courses.unshift(createCourse(name));
+  saveCourses(courses);
+  input.value = "";
+  renderCourseTracker();
+}
+
+function deleteCourse(courseId) {
+  saveCourses(getCourses().filter(course => course.id !== courseId));
+  renderCourseTracker();
+}
+
+function addCourseComponent(courseId) {
+  const courses = getCourses().map(course => {
+    if (course.id !== courseId) return course;
+    return {
+      ...course,
+      components: [...course.components, createComponent()]
+    };
+  });
+
+  saveCourses(courses);
+  renderCourseTracker();
+}
+
+function updateCourseComponent(courseId, componentId, field, value) {
+  const courses = getCourses().map(course => {
+    if (course.id !== courseId) return course;
+
+    return {
+      ...course,
+      components: course.components.map(component =>
+        component.id === componentId ? { ...component, [field]: value } : component
+      )
+    };
+  });
+
+  saveCourses(courses);
+  renderCourseTracker();
+}
+
+function deleteCourseComponent(courseId, componentId) {
+  const courses = getCourses().map(course => {
+    if (course.id !== courseId) return course;
+
+    return {
+      ...course,
+      components: course.components.filter(component => component.id !== componentId)
+    };
+  });
+
+  saveCourses(courses);
+  renderCourseTracker();
+}
+
+function renderCourseTracker() {
+  const list = document.getElementById("courseList");
+  const summary = document.getElementById("courseSummaryCount");
+  const average = document.getElementById("overallCourseAverage");
+
+  if (!list) return;
+
+  const courses = getCourses();
+  const completeScores = courses
+    .map(calculateCourseStats)
+    .filter(stats => stats.isComplete);
+
+  if (summary) {
+    summary.textContent = `${courses.length} Active`;
+  }
+
+  if (average) {
+    const score = completeScores.length
+      ? completeScores.reduce((total, stats) => total + stats.weightedScore, 0) / completeScores.length
+      : 0;
+    average.textContent = `${score.toFixed(1)}%`;
+  }
+
+  list.innerHTML = "";
+
+  if (courses.length === 0) {
+    list.innerHTML = `<div class="empty-state">No courses yet. Add a course, then add mark breakdown rows until the weight reaches 100%.</div>`;
+    return;
+  }
+
+  courses.forEach(course => {
+    const stats = calculateCourseStats(course);
+    const card = document.createElement("article");
+    card.className = "course-breakdown-card";
+
+    const statusClass = stats.isComplete ? "weight-good" : "weight-warning";
+    const statusText = stats.isComplete ? "Weight complete" : `Weight total ${stats.totalWeight || 0}%`;
+
+    card.innerHTML = `
+      <div class="course-card-top">
+        <div>
+          <h3>${course.name}</h3>
+          <p class="${statusClass}">${statusText}</p>
+        </div>
+        <div class="course-score">${stats.weightedScore.toFixed(1)}%</div>
+      </div>
+
+      <div class="component-summary">
+        <span>Percentage weights must add up to 100.</span>
+        <button type="button" class="mini-delete-btn" data-delete-course="${course.id}">Delete Course</button>
+      </div>
+
+      <div class="component-list" data-component-list="${course.id}"></div>
+      <button type="button" class="component-add-btn" data-add-component="${course.id}">Add Breakdown</button>
+    `;
+
+    const componentList = card.querySelector("[data-component-list]");
+    course.components.forEach(component => {
+      const componentRow = document.createElement("div");
+      componentRow.className = "component-row";
+
+      const totalMarks = Number(component.totalMarks);
+      const scoredMarks = Number(component.scoredMarks);
+      const rowPercent = Number.isFinite(totalMarks) && totalMarks > 0 && Number.isFinite(scoredMarks)
+        ? Math.min(scoredMarks, totalMarks) / totalMarks * 100
+        : 0;
+
+      componentRow.innerHTML = `
+        <select data-course-id="${course.id}" data-component-id="${component.id}" data-field="type">
+          ${["Assignment", "Quiz", "Mid Sem", "End Sem", "Lab", "Project", "Other"].map(option =>
+            `<option value="${option}"${component.type === option ? " selected" : ""}>${option}</option>`
+          ).join("")}
+        </select>
+        <input type="number" min="0" max="100" step="0.1" placeholder="Weight %" value="${component.weight}" data-course-id="${course.id}" data-component-id="${component.id}" data-field="weight">
+        <input type="number" min="0" step="0.1" placeholder="Total marks" value="${component.totalMarks}" data-course-id="${course.id}" data-component-id="${component.id}" data-field="totalMarks">
+        <input type="number" min="0" step="0.1" placeholder="Scored" value="${component.scoredMarks}" data-course-id="${course.id}" data-component-id="${component.id}" data-field="scoredMarks">
+        <div class="component-result">${rowPercent.toFixed(1)}%</div>
+        <button type="button" class="mini-delete-btn" data-delete-component="${component.id}" data-course-id="${course.id}">Remove</button>
+      `;
+
+      componentList.appendChild(componentRow);
+    });
+
+    list.appendChild(card);
+  });
+
+  list.querySelectorAll("[data-add-component]").forEach(button => {
+    button.addEventListener("click", event => addCourseComponent(event.target.dataset.addComponent));
+  });
+
+  list.querySelectorAll("[data-delete-course]").forEach(button => {
+    button.addEventListener("click", event => deleteCourse(event.target.dataset.deleteCourse));
+  });
+
+  list.querySelectorAll("[data-delete-component]").forEach(button => {
+    button.addEventListener("click", event => {
+      deleteCourseComponent(event.target.dataset.courseId, event.target.dataset.deleteComponent);
+    });
+  });
+
+  list.querySelectorAll("[data-field]").forEach(input => {
+    input.addEventListener("change", event => {
+      const { courseId, componentId, field } = event.target.dataset;
+      updateCourseComponent(courseId, componentId, field, event.target.value);
+    });
+  });
+}
+
+/* ================= DEADLINE TRACKER ================= */
+function getDeadlines() {
+  const deadlines = safeParse(localStorage.getItem(deadlineStorageKey()), []);
+  return Array.isArray(deadlines) ? deadlines : [];
+}
+
+function saveDeadlines(deadlines) {
+  localStorage.setItem(deadlineStorageKey(), JSON.stringify(deadlines));
+}
+
+function todayDateKey() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+function makeDateKey(year, month, day) {
+  return `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+}
+
+function addDeadline() {
+  const titleInput = document.getElementById("deadlineTitleInput");
+  const dateInput = document.getElementById("deadlineDateInput");
+  if (!titleInput || !dateInput) return;
+
+  const title = titleInput.value.trim();
+  const date = dateInput.value;
+
+  if (!title || !date) {
+    if (!title) titleInput.focus();
+    else dateInput.focus();
+    return;
+  }
+
+  const deadlines = getDeadlines();
+  deadlines.push({
+    id: `deadline_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
+    title,
+    date
+  });
+
+  saveDeadlines(deadlines);
+  titleInput.value = "";
+  dateInput.value = "";
+  renderDeadlineTracker();
+  renderCalendar();
+}
+
+function deleteDeadline(deadlineId) {
+  saveDeadlines(getDeadlines().filter(deadline => deadline.id !== deadlineId));
+  renderDeadlineTracker();
+  renderCalendar();
+}
+
+function formatDeadlineDate(dateKey) {
+  const date = new Date(`${dateKey}T00:00:00`);
+  return date.toLocaleDateString(undefined, {
+    month: "short",
+    day: "numeric",
+    year: "numeric"
+  });
+}
+
+function getUpcomingDeadlines() {
+  const today = todayDateKey();
+  const nextWeek = new Date();
+  nextWeek.setDate(nextWeek.getDate() + 7);
+  const nextWeekKey = nextWeek.toISOString().slice(0, 10);
+
+  return getDeadlines()
+    .filter(deadline => deadline.date >= today && deadline.date <= nextWeekKey)
+    .sort((a, b) => a.date.localeCompare(b.date));
+}
+
+function renderDeadlineTracker() {
+  const list = document.getElementById("deadlineList");
+  const alerts = document.getElementById("deadlineAlerts");
+  const summary = document.getElementById("deadlineSummaryCount");
+
+  if (!list) return;
+
+  const deadlines = getDeadlines().sort((a, b) => a.date.localeCompare(b.date));
+  const upcoming = getUpcomingDeadlines();
+
+  if (summary) {
+    summary.textContent = `${upcoming.length} Due Soon`;
+  }
+
+  if (alerts) {
+    alerts.innerHTML = "";
+
+    if (upcoming.length === 0) {
+      alerts.innerHTML = `<div class="empty-state">No upcoming deadlines in the next 7 days.</div>`;
+    } else {
+      upcoming.forEach(deadline => {
+        const alert = document.createElement("div");
+        alert.className = "deadline-alert";
+        alert.textContent = `${deadline.title} is due on ${formatDeadlineDate(deadline.date)}.`;
+        alerts.appendChild(alert);
+      });
+    }
+  }
+
+  list.innerHTML = "";
+
+  if (deadlines.length === 0) {
+    list.innerHTML = `<li class="empty-state">Add a deadline to turn that calendar date red.</li>`;
+    return;
+  }
+
+  deadlines.forEach(deadline => {
+    const item = document.createElement("li");
+    item.className = "deadline-item";
+    item.innerHTML = `
+      <div>
+        <strong>${deadline.title}</strong>
+        <time datetime="${deadline.date}">${formatDeadlineDate(deadline.date)}</time>
+      </div>
+      <button type="button" class="mini-delete-btn" data-delete-deadline="${deadline.id}">Remove</button>
+    `;
+    list.appendChild(item);
+  });
+
+  list.querySelectorAll("[data-delete-deadline]").forEach(button => {
+    button.addEventListener("click", event => deleteDeadline(event.target.dataset.deleteDeadline));
+  });
 }
 
 /* ================= OTP SYSTEM ================= */
@@ -948,19 +1317,30 @@ function renderCalendar() {
 
   const start = firstDay === 0 ? 6 : firstDay - 1;
   const today = new Date();
+  const deadlinesByDate = getDeadlines().reduce((map, deadline) => {
+    if (!map[deadline.date]) {
+      map[deadline.date] = [];
+    }
+
+    map[deadline.date].push(deadline.title);
+    return map;
+  }, {});
 
   for (let i = 0; i < start; i += 1) {
     datesContainer.innerHTML += "<div></div>";
   }
 
   for (let day = 1; day <= totalDays; day += 1) {
+    const dateKey = makeDateKey(year, month, day);
+    const deadlineTitles = deadlinesByDate[dateKey] || [];
+    const hasDeadline = deadlineTitles.length > 0;
     const isToday =
       day === today.getDate() &&
       month === today.getMonth() &&
       year === today.getFullYear();
 
     datesContainer.innerHTML += `
-      <div class="date ${isToday ? "today" : ""}">
+      <div class="date ${isToday ? "today" : ""} ${hasDeadline ? "deadline-day" : ""}" title="${hasDeadline ? deadlineTitles.join(", ") : ""}">
         ${day}
       </div>
     `;
@@ -998,7 +1378,26 @@ document.addEventListener("DOMContentLoaded", () => {
     input.focus();
   }
 
+  const courseNameInput = document.getElementById("courseNameInput");
+  if (courseNameInput) {
+    courseNameInput.addEventListener("keydown", event => {
+      if (event.key === "Enter") addCourse();
+    });
+  }
+
+  const deadlineTitleInput = document.getElementById("deadlineTitleInput");
+  const deadlineDateInput = document.getElementById("deadlineDateInput");
+  if (deadlineTitleInput && deadlineDateInput) {
+    [deadlineTitleInput, deadlineDateInput].forEach(deadlineInput => {
+      deadlineInput.addEventListener("keydown", event => {
+        if (event.key === "Enter") addDeadline();
+      });
+    });
+  }
+
   renderTodos();
+  renderCourseTracker();
+  renderDeadlineTracker();
   renderCalendar();
 
   if (window.location.pathname.includes("cpi.html")) {

@@ -668,6 +668,11 @@ function loginUser() {
     return;
   }
 
+  if (email === DEMO_ACCOUNT.email && password === DEMO_ACCOUNT.password) {
+    loginDemoUser();
+    return;
+  }
+
   const users = getUsers();
   const user = users.find(entry => entry.email === email);
 

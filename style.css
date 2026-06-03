@@ -219,6 +219,36 @@ body {
   box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.12);
 }
 
+.form-message {
+  min-height: 22px;
+  margin: -2px 0 14px;
+  color: var(--muted);
+  font-size: 0.92rem;
+  line-height: 1.45;
+}
+
+.form-message.error {
+  color: var(--danger);
+}
+
+.form-message.success {
+  color: #047857;
+}
+
+.email-chip {
+  display: none;
+  width: fit-content;
+  max-width: 100%;
+  margin: -6px 0 18px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: #dbeafe;
+  color: var(--primary-dark);
+  font-size: 0.9rem;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
 .dashboard-page .todo-input input:focus {
   border-color: #93c5fd;
   box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.12);
@@ -255,6 +285,12 @@ button {
 button:hover {
   background: var(--primary-dark);
   transform: translateY(-1px);
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+  transform: none;
 }
 
 button.secondary {

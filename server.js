@@ -7,6 +7,7 @@ require("dotenv").config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 const OTP_EXPIRY_MS = 5 * 60 * 1000;
+const DEV_OTP = process.env.DEV_OTP || "123456";
 const otpStore = new Map();
 
 app.use(cors());
@@ -43,6 +44,11 @@ function getTransporter() {
   });
 }
 
+function hasSmtpConfig() {
+  const { SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS } = process.env;
+  return Boolean(SMTP_HOST && SMTP_PORT && SMTP_USER && SMTP_PASS);
+}
+
 async function sendOtpEmail(email, otp) {
   const transporter = getTransporter();
   const sender = process.env.FROM_EMAIL || process.env.SMTP_USER;
@@ -77,6 +83,15 @@ app.post("/api/send-otp", async (req, res) => {
 
   const otp = createOtp();
   const expiresAt = Date.now() + OTP_EXPIRY_MS;
+
+  if (!hasSmtpConfig() || process.env.NODE_ENV !== "production" && process.env.USE_DEV_OTP === "true") {
+    otpStore.set(email, { otp: DEV_OTP, expiresAt });
+    return res.json({
+      ok: true,
+      message: `Demo OTP ready. Use ${DEV_OTP}.`,
+      devOtp: DEV_OTP
+    });
+  }
 
   try {
     await sendOtpEmail(email, otp);

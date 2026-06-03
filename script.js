@@ -1,9 +1,13 @@
 /* ================= NAVIGATION ================= */
 function goToSignup() {
+  localStorage.setItem(STORAGE_KEYS.authMode, AUTH_MODES.signup);
+  localStorage.removeItem(STORAGE_KEYS.authNotice);
+  localStorage.removeItem(STORAGE_KEYS.userEmail);
   window.location.href = "signup.html";
 }
 
 function goToLogin() {
+  localStorage.removeItem(STORAGE_KEYS.authNotice);
   window.location.href = "index.html";
 }
 
@@ -13,11 +17,19 @@ const STORAGE_KEYS = {
   currentUser: "currentUser",
   isLoggedIn: "isLoggedIn",
   userEmail: "userEmail",
+  authMode: "authMode",
+  authNotice: "authNotice",
   savedEmails: "savedEmails",
   semesters: "semesters"
 };
 
-const API_BASE_URL = "http://localhost:3000";
+const API_BASE_URL = window.location.origin.startsWith("http")
+  ? window.location.origin
+  : "http://localhost:3000";
+const AUTH_MODES = {
+  signup: "signup",
+  reset: "reset"
+};
 let todos = [];
 let currentDate = new Date();
 
@@ -32,6 +44,32 @@ function safeParse(value, fallback) {
 
 function normalizeEmail(email) {
   return (email || "").trim().toLowerCase();
+}
+
+function isValidEmail(email) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+
+function setMessage(id, message, type = "error") {
+  const element = document.getElementById(id);
+  if (!element) return;
+
+  element.textContent = message || "";
+  element.className = `form-message${message ? ` ${type}` : ""}`;
+}
+
+function setButtonBusy(button, isBusy, busyLabel) {
+  if (!button) return;
+
+  if (isBusy) {
+    button.dataset.originalText = button.textContent;
+    button.textContent = busyLabel;
+    button.disabled = true;
+    return;
+  }
+
+  button.textContent = button.dataset.originalText || button.textContent;
+  button.disabled = false;
 }
 
 function getUsers() {
@@ -385,15 +423,36 @@ function renderSPITable() {
 /* ================= OTP SYSTEM ================= */
 async function sendOTP() {
   const emailInput = document.getElementById("email");
+  const button = document.querySelector("button[onclick='sendOTP()']");
+  const normalizedEmail = normalizeEmail(emailInput ? emailInput.value : "");
 
-  if (!emailInput || emailInput.value.trim() === "") {
-    alert("Enter email first");
+  if (!normalizedEmail) {
+    setMessage("signupMessage", "Enter your email first.");
     return;
   }
 
-  const normalizedEmail = normalizeEmail(emailInput.value);
+  if (!isValidEmail(normalizedEmail)) {
+    setMessage("signupMessage", "Enter a valid email address.");
+    return;
+  }
+
+  const authMode = localStorage.getItem(STORAGE_KEYS.authMode) || AUTH_MODES.signup;
+  const userExists = getUsers().some(user => user.email === normalizedEmail);
+
+  if (authMode === AUTH_MODES.signup && userExists) {
+    setMessage("signupMessage", "That email already has an account. Login or use forgot password.");
+    return;
+  }
+
+  if (authMode === AUTH_MODES.reset && !userExists) {
+    setMessage("signupMessage", "No account was found for that email.");
+    return;
+  }
 
   try {
+    setButtonBusy(button, true, "Sending...");
+    setMessage("signupMessage", "Sending OTP...", "success");
+
     const response = await fetch(`${API_BASE_URL}/api/send-otp`, {
       method: "POST",
       headers: {
@@ -405,14 +464,20 @@ async function sendOTP() {
     const data = await response.json();
 
     if (!response.ok) {
-      alert(data.message || "Unable to send OTP.");
+      setMessage("signupMessage", data.message || "Unable to send OTP.");
       return;
     }
 
     localStorage.setItem(STORAGE_KEYS.userEmail, normalizedEmail);
-    alert(`OTP sent to ${normalizedEmail}`);
+    localStorage.setItem(STORAGE_KEYS.authMode, authMode);
+
+    const otpNote = data.devOtp ? ` Use ${data.devOtp}.` : "";
+    const purpose = authMode === AUTH_MODES.reset ? "Reset OTP" : "OTP";
+    setMessage("signupMessage", `${purpose} sent to ${normalizedEmail}.${otpNote}`, "success");
   } catch (error) {
-    alert("Could not connect to the OTP server. Start the backend first.");
+    setMessage("signupMessage", "Could not connect to the OTP server. Run npm start first.");
+  } finally {
+    setButtonBusy(button, false);
   }
 }
 
@@ -423,9 +488,15 @@ function resendOTP() {
 async function verifyOTP() {
   const otpInput = document.getElementById("otp");
   const email = normalizeEmail(localStorage.getItem(STORAGE_KEYS.userEmail));
+  const otp = otpInput ? otpInput.value.trim() : "";
 
-  if (!otpInput || !email) {
-    alert("Send OTP first.");
+  if (!email) {
+    setMessage("signupMessage", "Send OTP first.");
+    return;
+  }
+
+  if (!otp) {
+    setMessage("signupMessage", "Enter the OTP.");
     return;
   }
 
@@ -437,54 +508,127 @@ async function verifyOTP() {
       },
       body: JSON.stringify({
         email,
-        otp: otpInput.value.trim()
+        otp
       })
     });
 
     const data = await response.json();
 
     if (!response.ok) {
-      alert(data.message || "Wrong OTP");
+      setMessage("signupMessage", data.message || "Wrong OTP");
       return;
     }
 
-    alert("Verified successfully");
+    setMessage("signupMessage", "Verified successfully. Opening password setup...", "success");
     window.location.href = "password.html";
   } catch (error) {
-    alert("Could not connect to the OTP server. Start the backend first.");
+    setMessage("signupMessage", "Could not connect to the OTP server. Run npm start first.");
+  }
+}
+
+async function startPasswordReset() {
+  const emailInput = document.getElementById("loginEmail");
+  const email = normalizeEmail(emailInput ? emailInput.value : "");
+
+  if (!email) {
+    setMessage("loginMessage", "Enter your registered email first, then tap forgot password.");
+    return;
+  }
+
+  if (!isValidEmail(email)) {
+    setMessage("loginMessage", "Enter a valid email address.");
+    return;
+  }
+
+  if (!getUsers().some(user => user.email === email)) {
+    setMessage("loginMessage", "No account was found for that email.");
+    return;
+  }
+
+  try {
+    setMessage("loginMessage", "Sending reset OTP...", "success");
+
+    const response = await fetch(`${API_BASE_URL}/api/send-otp`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ email })
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      setMessage("loginMessage", data.message || "Unable to send reset OTP.");
+      return;
+    }
+
+    localStorage.setItem(STORAGE_KEYS.userEmail, email);
+    localStorage.setItem(STORAGE_KEYS.authMode, AUTH_MODES.reset);
+    saveRememberedEmail(email);
+    const otpNote = data.devOtp ? ` Use ${data.devOtp}.` : "";
+    localStorage.setItem(STORAGE_KEYS.authNotice, `Reset OTP sent to ${email}.${otpNote}`);
+    window.location.href = "signup.html";
+  } catch (error) {
+    setMessage("loginMessage", "Could not connect to the OTP server. Run npm start first.");
   }
 }
 
 /* ================= PASSWORD SAVE ================= */
 function savePassword() {
-  const password = document.getElementById("password").value;
-  const confirmPassword = document.getElementById("confirmPassword").value;
+  const passwordInput = document.getElementById("password");
+  const confirmPasswordInput = document.getElementById("confirmPassword");
+  const password = passwordInput ? passwordInput.value : "";
+  const confirmPassword = confirmPasswordInput ? confirmPasswordInput.value : "";
+  const email = normalizeEmail(localStorage.getItem(STORAGE_KEYS.userEmail));
+  const mode = localStorage.getItem(STORAGE_KEYS.authMode) || AUTH_MODES.signup;
 
-  if (password === "" || confirmPassword === "") {
-    alert("Fill all fields");
+  if (!email) {
+    setMessage("passwordMessage", "Start from signup or forgot password first.");
+    return;
+  }
+
+  if (!password || !confirmPassword) {
+    setMessage("passwordMessage", "Fill in both password fields.");
+    return;
+  }
+
+  if (password.length < 6) {
+    setMessage("passwordMessage", "Use at least 6 characters.");
     return;
   }
 
   if (password !== confirmPassword) {
-    alert("Passwords do not match");
+    setMessage("passwordMessage", "Passwords do not match.");
     return;
   }
 
-  const email = normalizeEmail(localStorage.getItem(STORAGE_KEYS.userEmail));
   const users = getUsers();
-  const userExists = users.find(user => user.email === email);
+  const existingIndex = users.findIndex(user => user.email === email);
 
-  if (userExists) {
-    alert("User already exists.");
-    return;
+  if (mode === AUTH_MODES.reset) {
+    if (existingIndex === -1) {
+      setMessage("passwordMessage", "That account does not exist anymore.");
+      return;
+    }
+
+    users[existingIndex].password = password;
+  } else {
+    if (existingIndex !== -1) {
+      setMessage("passwordMessage", "That account already exists. Login or reset the password.");
+      return;
+    }
+
+    users.push({ email, password });
   }
 
-  users.push({ email, password });
   saveUsers(users);
 
   localStorage.setItem(STORAGE_KEYS.isLoggedIn, "true");
   localStorage.setItem(STORAGE_KEYS.currentUser, email);
   saveRememberedEmail(email);
+  localStorage.removeItem(STORAGE_KEYS.authMode);
+  localStorage.removeItem(STORAGE_KEYS.authNotice);
 
   window.location.href = "dashboard.html";
 }
@@ -494,10 +638,15 @@ function loginUser() {
   const emailInput = document.getElementById("loginEmail");
   const passwordInput = document.getElementById("loginPassword");
   const email = normalizeEmail(emailInput ? emailInput.value : "");
-  const password = passwordInput ? passwordInput.value.trim() : "";
+  const password = passwordInput ? passwordInput.value : "";
 
-  if (email === "" || password === "") {
-    alert("Fill all fields");
+  if (!email || !password) {
+    setMessage("loginMessage", "Fill in both email and password.");
+    return;
+  }
+
+  if (!isValidEmail(email)) {
+    setMessage("loginMessage", "Enter a valid email address.");
     return;
   }
 
@@ -505,20 +654,114 @@ function loginUser() {
   const user = users.find(entry => entry.email === email);
 
   if (!user) {
-    alert("No account found");
+    setMessage("loginMessage", "No account found. Create an account first.");
     return;
   }
 
   if (user.password !== password) {
-    alert("Incorrect password");
+    setMessage("loginMessage", "Incorrect password.");
     return;
   }
 
   localStorage.setItem(STORAGE_KEYS.isLoggedIn, "true");
   localStorage.setItem(STORAGE_KEYS.currentUser, email);
   saveRememberedEmail(email);
+  setMessage("loginMessage", "Login successful. Opening dashboard...", "success");
 
   window.location.href = "dashboard.html";
+}
+
+function setupPasswordPage() {
+  const title = document.getElementById("passwordTitle");
+  const subtitle = document.getElementById("passwordSubtitle");
+  const emailChip = document.getElementById("passwordEmail");
+  const action = document.getElementById("passwordAction");
+  const email = normalizeEmail(localStorage.getItem(STORAGE_KEYS.userEmail));
+  const mode = localStorage.getItem(STORAGE_KEYS.authMode) || AUTH_MODES.signup;
+
+  if (!title || !subtitle) return;
+
+  if (!email) {
+    setMessage("passwordMessage", "Start from signup or forgot password first.");
+    return;
+  }
+
+  if (emailChip) {
+    emailChip.textContent = email;
+    emailChip.style.display = "block";
+  }
+
+  if (mode === AUTH_MODES.reset) {
+    title.textContent = "Create a new password";
+    subtitle.textContent = "Reset the password for your GradeSync account.";
+    if (action) action.textContent = "Update Password";
+  }
+}
+
+function setupAuthForms() {
+  const loginEmail = document.getElementById("loginEmail");
+  const savedEmails = getSavedEmails();
+
+  if (loginEmail && savedEmails.length > 0 && !loginEmail.value) {
+    loginEmail.value = savedEmails[0];
+  }
+
+  const loginPassword = document.getElementById("loginPassword");
+  if (loginEmail && loginPassword) {
+    [loginEmail, loginPassword].forEach(input => {
+      input.addEventListener("keydown", event => {
+        if (event.key === "Enter") loginUser();
+      });
+    });
+  }
+
+  const signupEmail = document.getElementById("email");
+  const otpInput = document.getElementById("otp");
+  const authMode = localStorage.getItem(STORAGE_KEYS.authMode) || AUTH_MODES.signup;
+  const pendingEmail = normalizeEmail(localStorage.getItem(STORAGE_KEYS.userEmail));
+  const authNotice = localStorage.getItem(STORAGE_KEYS.authNotice);
+
+  if (signupEmail && pendingEmail) {
+    signupEmail.value = pendingEmail;
+  }
+
+  if (signupEmail && authMode === AUTH_MODES.reset) {
+    const headerTitle = document.querySelector(".auth-card .card-header h2");
+    const headerText = document.querySelector(".auth-card .card-header p");
+    const introTag = document.querySelector(".page-tag");
+    const introTitle = document.querySelector(".auth-intro h1");
+    const introText = document.querySelector(".auth-intro p");
+
+    if (headerTitle) headerTitle.textContent = "Verify reset OTP";
+    if (headerText) headerText.textContent = "Enter the OTP sent for your password reset.";
+    if (introTag) introTag.textContent = "Password Reset";
+    if (introTitle) introTitle.textContent = "Reset your password and get back to your dashboard.";
+    if (introText) introText.textContent = "Verify your email with an OTP, then create a fresh password for your GradeSync account.";
+  }
+
+  if (signupEmail && authNotice) {
+    setMessage("signupMessage", authNotice, "success");
+    localStorage.removeItem(STORAGE_KEYS.authNotice);
+  }
+
+  if (signupEmail && otpInput) {
+    signupEmail.addEventListener("keydown", event => {
+      if (event.key === "Enter") sendOTP();
+    });
+    otpInput.addEventListener("keydown", event => {
+      if (event.key === "Enter") verifyOTP();
+    });
+  }
+
+  const password = document.getElementById("password");
+  const confirmPassword = document.getElementById("confirmPassword");
+  if (password && confirmPassword) {
+    [password, confirmPassword].forEach(input => {
+      input.addEventListener("keydown", event => {
+        if (event.key === "Enter") savePassword();
+      });
+    });
+  }
 }
 
 /* ================= AUTH ================= */
@@ -705,6 +948,8 @@ function nextMonth() {
 /* ================= INITIAL LOAD ================= */
 document.addEventListener("DOMContentLoaded", () => {
   populateSavedEmails();
+  setupAuthForms();
+  setupPasswordPage();
 
   if (window.location.pathname.includes("dashboard.html")) {
     checkAuth();

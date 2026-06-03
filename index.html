@@ -32,10 +32,14 @@
         <input type="password" id="loginPassword" placeholder="Enter your password">
       </div>
 
+      <p class="form-message" id="loginMessage" role="status" aria-live="polite"></p>
+
       <div class="button-group">
         <button type="button" onclick="loginUser()">Login</button>
         <button type="button" class="secondary" onclick="goToSignup()">Create account</button>
       </div>
+
+      <button type="button" class="text-button" onclick="startPasswordReset()">Forgot password?</button>
     </section>
   </main>
 

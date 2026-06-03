@@ -302,6 +302,16 @@ button.secondary:hover {
   background: #cbd5e1;
 }
 
+.demo-button {
+  width: 100%;
+  margin-top: 12px;
+  background: #0f766e;
+}
+
+.demo-button:hover {
+  background: #0d5f59;
+}
+
 .text-button {
   margin-top: 16px;
   background: transparent;

@@ -30,6 +30,10 @@ const AUTH_MODES = {
   signup: "signup",
   reset: "reset"
 };
+const DEMO_ACCOUNT = {
+  email: "demo@gradesync.com",
+  password: "demo123"
+};
 let todos = [];
 let currentDate = new Date();
 
@@ -78,6 +82,20 @@ function getUsers() {
 
 function saveUsers(users) {
   localStorage.setItem(STORAGE_KEYS.users, JSON.stringify(users));
+}
+
+function seedDemoAccount() {
+  const users = getUsers();
+  const demoIndex = users.findIndex(user => user.email === DEMO_ACCOUNT.email);
+
+  if (demoIndex === -1) {
+    users.push({ ...DEMO_ACCOUNT });
+  } else {
+    users[demoIndex].password = DEMO_ACCOUNT.password;
+  }
+
+  saveUsers(users);
+  saveRememberedEmail(DEMO_ACCOUNT.email);
 }
 
 function getSavedEmails() {
@@ -671,6 +689,15 @@ function loginUser() {
   window.location.href = "dashboard.html";
 }
 
+function loginDemoUser() {
+  seedDemoAccount();
+  localStorage.setItem(STORAGE_KEYS.isLoggedIn, "true");
+  localStorage.setItem(STORAGE_KEYS.currentUser, DEMO_ACCOUNT.email);
+  saveRememberedEmail(DEMO_ACCOUNT.email);
+  setMessage("loginMessage", "Demo login successful. Opening dashboard...", "success");
+  window.location.href = "dashboard.html";
+}
+
 function setupPasswordPage() {
   const title = document.getElementById("passwordTitle");
   const subtitle = document.getElementById("passwordSubtitle");
@@ -947,6 +974,7 @@ function nextMonth() {
 
 /* ================= INITIAL LOAD ================= */
 document.addEventListener("DOMContentLoaded", () => {
+  seedDemoAccount();
   populateSavedEmails();
   setupAuthForms();
   setupPasswordPage();

@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GradeSync | Dashboard</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="dashboard-page">
+  <div class="dashboard-wrapper">
+    <header class="dashboard-header">
+      <div class="dashboard-brand">
+        <div class="dashboard-heading">
+          <div class="site-indicator dashboard-site-indicator" aria-label="GradeSync website mark">
+            <img src="assets/2455a7f2-be5b-4508-971b-fc18e725fde2.png" alt="GradeSync mark" class="site-indicator-image">
+          </div>
+          <h1>Student Workspace</h1>
+          <p>Manage your daily tasks and check your monthly schedule.</p>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <button type="button" class="logout-btn" onclick="logout()">Logout</button>
+      </div>
+    </header>
+
+    <main class="dashboard-layout">
+      <section class="dashboard-card">
+        <div class="calendar-header">
+          <button type="button" onclick="prevMonth()">&#10094;</button>
+          <h2 id="monthYear"></h2>
+          <button type="button" onclick="nextMonth()">&#10095;</button>
+        </div>
+
+        <div class="days">
+          <span>Mon</span>
+          <span>Tue</span>
+          <span>Wed</span>
+          <span>Thu</span>
+          <span>Fri</span>
+          <span>Sat</span>
+          <span>Sun</span>
+        </div>
+
+        <div class="dates" id="calendarDates"></div>
+      </section>
+
+      <section class="dashboard-card">
+        <div class="section-header">
+          <h2>To-Do List</h2>
+          <p>Add tasks for assignments, revisions, or reminders.</p>
+        </div>
+
+        <div class="todo-input">
+          <input type="text" id="todoInput" placeholder="Enter a task">
+          <button type="button" onclick="addTodo()">Add</button>
+        </div>
+
+        <ul id="todoList" class="todo-list"></ul>
+      </section>
+    </main>
+
+    <section class="tracker-grid">
+      <article class="tracker-card cpi-card tracker-link-card" onclick="openCPITracker()">
+        <span class="tracker-label">CPI Tracker</span>
+        <strong>8.3</strong>
+        <p>Open semester boxes, manage SPI, and calculate CPI across selected terms.</p>
+      </article>
+
+      <article class="tracker-card course-card">
+        <span class="tracker-label">Course Tracker</span>
+        <strong>5 Active</strong>
+        <p>Track assignments, submissions, and class progress in one place.</p>
+      </article>
+
+      <article class="tracker-card deadline-card">
+        <span class="tracker-label">Deadline Note</span>
+        <strong>2 Due Soon</strong>
+        <p>Check your to-do list and calendar together before this week ends.</p>
+      </article>
+    </section>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>

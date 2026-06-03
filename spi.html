@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GradeSync | SPI Details</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="dashboard-page tracker-page">
+  <div class="dashboard-wrapper tracker-wrapper">
+    <header class="dashboard-header tracker-header">
+      <div class="dashboard-brand">
+        <div class="dashboard-heading">
+          <h1 id="spiPageTitle">Semester SPI</h1>
+          <p>Manage courses, credits, and points for this semester box.</p>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <button type="button" class="secondary-nav-btn" onclick="window.location.href='cpi.html'">Back to Boxes</button>
+      </div>
+    </header>
+
+    <section class="tracker-dashboard-card spi-summary-panel">
+      <div class="spi-summary-block">
+        <span class="tracker-label">Semester SPI</span>
+        <strong id="spiValue">0.00</strong>
+      </div>
+
+      <div class="spi-summary-block">
+        <span class="tracker-label">Total Credits</span>
+        <strong id="spiCredits">0</strong>
+      </div>
+
+      <button type="button" onclick="addSemesterCourse()">Add Course</button>
+    </section>
+
+    <section class="tracker-dashboard-card spi-table-card">
+      <div class="spi-table-header">
+        <h2>Courses</h2>
+        <p>Points should be integers from 0 to 10.</p>
+      </div>
+
+      <div class="spi-table-wrap">
+        <table class="spi-table">
+          <thead>
+            <tr>
+              <th>Course Title</th>
+              <th>Credits</th>
+              <th>Points</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="spiTableBody"></tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>

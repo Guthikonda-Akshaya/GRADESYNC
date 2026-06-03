@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GradeSync | CPI Tracker</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="dashboard-page tracker-page">
+  <div class="dashboard-wrapper tracker-wrapper">
+    <header class="dashboard-header tracker-header">
+      <div class="dashboard-brand">
+        <div class="dashboard-heading">
+          <h1>CPI Tracker</h1>
+          <p>Select semester boxes to calculate CPI, or open any box to manage its SPI courses.</p>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <button type="button" class="secondary-nav-btn" onclick="window.location.href='dashboard.html'">Back to Dashboard</button>
+      </div>
+    </header>
+
+    <section class="tracker-dashboard-card cpi-control-panel">
+      <div>
+        <h2>CPI Controls</h2>
+        <p>Choose specific boxes or include all saved boxes.</p>
+      </div>
+
+      <div class="cpi-actions">
+        <label class="select-all-toggle">
+          <input type="checkbox" id="selectAllSemesters">
+          <span>Select all boxes</span>
+        </label>
+        <button type="button" onclick="calculateCPI()">Calculate CPI</button>
+      </div>
+
+      <div class="cpi-result-box">
+        <span class="tracker-label">Current CPI</span>
+        <strong id="cpiValue">0.00</strong>
+        <p id="cpiMeta">No semester boxes selected yet.</p>
+      </div>
+    </section>
+
+    <section class="semester-grid" id="semesterGrid"></section>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>

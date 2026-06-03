@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GradeSync | Sign Up</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="auth-page">
+  <main class="auth-shell">
+    <section class="auth-intro">
+      <img src="assets/logo.png" alt="GradeSync logo" class="brand-logo">
+      <span class="page-tag">New Student Account</span>
+      <h1>Create your workspace and start organizing your semester.</h1>
+      <p>
+        Sign up with your email, verify the demo OTP, and set a password to
+        access your personal dashboard.
+      </p>
+
+      <div class="intro-points">
+        <div class="intro-point">Quick OTP-based signup flow</div>
+        <div class="intro-point">Clean dashboard for everyday use</div>
+        <div class="intro-point">Made for student project workflows</div>
+      </div>
+    </section>
+
+    <section class="auth-card">
+      <div class="card-header">
+        <h2>Create account</h2>
+        <p>Enter your email and use the OTP sent to your inbox.</p>
+      </div>
+
+      <div class="input-group">
+        <label for="email">Email</label>
+        <input type="email" id="email" placeholder="student@example.com">
+      </div>
+
+      <div class="input-group">
+        <label for="otp">OTP</label>
+        <input type="text" id="otp" placeholder="Enter the OTP from email">
+      </div>
+
+      <div class="button-group">
+        <button type="button" onclick="sendOTP()">Send OTP</button>
+        <button type="button" class="secondary" onclick="verifyOTP()">Verify OTP</button>
+      </div>
+
+      <button type="button" class="text-button" onclick="goToLogin()">Back to login</button>
+    </section>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>

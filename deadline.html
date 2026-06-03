@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GradeSync | Deadline Tracker</title>
+  <link rel="stylesheet" href="style.css?v=tracker-pages">
+</head>
+<body class="dashboard-page tracker-page">
+  <div class="dashboard-wrapper tracker-wrapper">
+    <header class="dashboard-header tracker-header">
+      <div class="dashboard-brand">
+        <div class="dashboard-heading">
+          <h1>Deadline Tracker</h1>
+          <p>Add deadlines, review upcoming alerts, and mark matching dashboard calendar dates in red.</p>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <button type="button" class="secondary-nav-btn" onclick="window.location.href='dashboard.html'">Back to Dashboard</button>
+      </div>
+    </header>
+
+    <section class="tracker-dashboard-card deadline-panel">
+      <div class="tool-header">
+        <div>
+          <span class="tracker-label">Deadline Alerts</span>
+          <h2>Upcoming Work</h2>
+          <p>Add important dates here. The dashboard calendar turns those dates red.</p>
+        </div>
+      </div>
+
+      <div class="deadline-add-row">
+        <input type="text" id="deadlineTitleInput" placeholder="Deadline title">
+        <input type="date" id="deadlineDateInput">
+        <button type="button" onclick="addDeadline()">Add</button>
+      </div>
+
+      <div class="deadline-alerts" id="deadlineAlerts"></div>
+      <ul class="deadline-list" id="deadlineList"></ul>
+    </section>
+  </div>
+
+  <script src="script.js?v=tracker-pages"></script>
+</body>
+</html>

@@ -203,6 +203,14 @@ function openCPITracker() {
   window.location.href = "cpi.html";
 }
 
+function openCourseTracker() {
+  window.location.href = "course.html";
+}
+
+function openDeadlineTracker() {
+  window.location.href = "deadline.html";
+}
+
 function getSemesterIdFromUrl() {
   const params = new URLSearchParams(window.location.search);
   return params.get("semester");
@@ -578,8 +586,6 @@ function renderCourseTracker() {
   const summary = document.getElementById("courseSummaryCount");
   const average = document.getElementById("overallCourseAverage");
 
-  if (!list) return;
-
   const courses = getCourses();
   const completeScores = courses
     .map(calculateCourseStats)
@@ -595,6 +601,8 @@ function renderCourseTracker() {
       : 0;
     average.textContent = `${score.toFixed(1)}%`;
   }
+
+  if (!list) return;
 
   list.innerHTML = "";
 
@@ -758,14 +766,14 @@ function renderDeadlineTracker() {
   const alerts = document.getElementById("deadlineAlerts");
   const summary = document.getElementById("deadlineSummaryCount");
 
-  if (!list) return;
-
   const deadlines = getDeadlines().sort((a, b) => a.date.localeCompare(b.date));
   const upcoming = getUpcomingDeadlines();
 
   if (summary) {
     summary.textContent = `${upcoming.length} Due Soon`;
   }
+
+  if (!list) return;
 
   if (alerts) {
     alerts.innerHTML = "";
@@ -1364,7 +1372,8 @@ document.addEventListener("DOMContentLoaded", () => {
   setupAuthForms();
   setupPasswordPage();
 
-  if (window.location.pathname.includes("dashboard.html")) {
+  const protectedPages = ["dashboard.html", "course.html", "deadline.html", "cpi.html", "spi.html"];
+  if (protectedPages.some(page => window.location.pathname.includes(page))) {
     checkAuth();
   }
 

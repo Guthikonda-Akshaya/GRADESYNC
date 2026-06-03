@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GradeSync | Course Tracker</title>
+  <link rel="stylesheet" href="style.css?v=tracker-pages">
+</head>
+<body class="dashboard-page tracker-page">
+  <div class="dashboard-wrapper tracker-wrapper">
+    <header class="dashboard-header tracker-header">
+      <div class="dashboard-brand">
+        <div class="dashboard-heading">
+          <h1>Course Tracker</h1>
+          <p>Add courses and calculate weighted scores from assignments, quizzes, mid sem, end sem, and more.</p>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <button type="button" class="secondary-nav-btn" onclick="window.location.href='dashboard.html'">Back to Dashboard</button>
+      </div>
+    </header>
+
+    <section class="tracker-dashboard-card course-tracker-panel">
+      <div class="tool-header">
+        <div>
+          <span class="tracker-label">Course Breakdown</span>
+          <h2>Marks Calculator</h2>
+          <p>Make the weight percentages add up to 100 to get a complete course score.</p>
+        </div>
+        <div class="course-total-chip" id="overallCourseAverage">0%</div>
+      </div>
+
+      <div class="course-add-row">
+        <input type="text" id="courseNameInput" placeholder="Course name">
+        <button type="button" onclick="addCourse()">Add Course</button>
+      </div>
+
+      <div class="course-list" id="courseList"></div>
+    </section>
+  </div>
+
+  <script src="script.js?v=tracker-pages"></script>
+</body>
+</html>

@@ -339,7 +339,7 @@ button.secondary:hover {
 
 .dashboard-header {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
   gap: 18px;
   padding: 24px 28px;
@@ -348,20 +348,22 @@ button.secondary:hover {
 
 .dashboard-brand {
   display: flex;
-  align-items: flex-start;
-  gap: 14px;
+  align-items: center;
+  gap: 22px;
+  min-width: 0;
 }
 
 .dashboard-site-indicator {
-  width: 250px;
-  height: 78px;
+  width: 230px;
+  height: 72px;
   flex-shrink: 0;
-  margin: 0 0 14px;
+  margin: 0;
 }
 
 .dashboard-heading h1 {
   margin: 0 0 6px;
   font-size: 1.9rem;
+  color: var(--text);
 }
 
 .dashboard-heading p {
@@ -398,6 +400,11 @@ button.secondary:hover {
   object-fit: contain;
   opacity: 0.94;
   filter: saturate(0.96) contrast(1);
+}
+
+.site-indicator.dashboard-site-indicator {
+  width: 230px;
+  height: 72px;
 }
 
 .logout-btn {
@@ -1098,8 +1105,13 @@ button.secondary:hover {
   }
 
   .dashboard-site-indicator {
-    width: 220px;
-    height: 70px;
+    width: 210px;
+    height: 66px;
+  }
+
+  .site-indicator.dashboard-site-indicator {
+    width: 210px;
+    height: 66px;
   }
 
   .auth-intro,
